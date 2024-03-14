@@ -26,7 +26,7 @@ app.use(express.static('public'));
 app.set('view engine', 'hbs');
 
 app.get('/', (req, res) => {
-    res.render('form');
+    res.render('index');
 });
 
 app.post('/submit', async (req, res) => {
