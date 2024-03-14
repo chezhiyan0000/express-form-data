@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const fs = require('fs/promises');
-const path = require('path'); // Add this line
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +13,8 @@ mongoose.connect('mongodb://localhost/your_database_name', { useNewUrlParser: tr
 
 const userDataSchema = new mongoose.Schema({
     name: String,
-    email: String
+    email: String,
+    password: String
 });
 
 const UserData = mongoose.model('UserData', userDataSchema);
@@ -30,9 +31,25 @@ app.get('/', (req, res) => {
 
 app.post('/submit', async (req, res) => {
     try {
+        // Check if the password is greater than or equal to 6 characters
+        if (req.body.password.length < 6) {
+            return res.status(400).send('Password must be at least 6 characters long');
+        }
+
+        // Check if the password contains at least one uppercase letter
+        if (!/[A-Z]/.test(req.body.password)) {
+            return res.status(400).send('Password must contain at least one uppercase letter');
+        }
+
+        // Check if the password contains at least one special character
+        if (!/[^a-zA-Z0-9]/.test(req.body.password)) {
+            return res.status(400).send('Password must contain at least one special character');
+        }
+
         const userData = new UserData({
             name: req.body.name,
-            email: req.body.email
+            email: req.body.email,
+            password: req.body.password
         });
 
         await userData.save();
@@ -46,10 +63,8 @@ app.post('/submit', async (req, res) => {
 
 app.get('/display', async (req, res) => {
     try {
-        // Fetch data from MongoDB
         const mongoDBData = await UserData.find();
 
-        // Fetch data from data.json file
         let fileData = [];
         try {
             const fileContent = await fs.readFile(dataFilePath, 'utf-8');
